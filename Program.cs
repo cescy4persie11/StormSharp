@@ -98,9 +98,6 @@ namespace StormSharp
         private static ZipZap ZipZap;
         private static bool AbuseDroppedItem;
         private static bool EnemyCasting;
-        private static int state;
-        private static bool ChasingDisplayEN;
-        private static bool lockHero = false;
         private static ParticleEffect meToTargetParticleEffect;
         static void Main(string[] args)
         {

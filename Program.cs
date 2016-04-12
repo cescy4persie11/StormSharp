@@ -369,7 +369,28 @@ namespace StormSharp
 
         private static void Drawing_OnDraw_TP(EventArgs args)
         {
-            if (FleeTpEnabled.GetValue<KeyBind>().Active)
+            if (!_loaded)
+            {
+                if (!Game.IsInGame || _me == null)
+                {
+                    return;
+                }
+                if (_me.ClassID == ClassID.CDOTA_Unit_Hero_StormSpirit)
+                {
+                    ItemSlots.Clear();
+                    _loaded = true;
+                    PrintSuccess("Zhfyang: StormSharp loaded! v" + Ver);
+
+                }
+                if (!Game.IsInGame || _me == null)
+                {
+                    _loaded = false;
+                    PrintInfo("Zhfyang: StormSharp unLoaded");
+                    return;
+                }
+            }
+
+                if (FleeTpEnabled.GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 120, 50);
                 var size = new Vector2(90, 90);
@@ -576,7 +597,12 @@ namespace StormSharp
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
             ManaDisplayEn = false;
-            //Disable Mana Display Once Another EventOrder comes            
+            //Disable Mana Display Once Another EventOrder comes     
+            if (!_me.IsAlive)
+            {
+                ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+            }       
             switch (args.Order)
             {
                 

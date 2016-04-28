@@ -77,7 +77,7 @@ namespace StormSharp
         private static readonly MenuItem AutoAttackDodgeMenu = new MenuItem("AutoAttack Dodge", "AutoAttack Dodge").SetValue(true).SetTooltip("");
         private static readonly Menu FleeMenu = new Menu("Flee mode settings", "Flee mode settings");
         private static readonly MenuItem FleeHotkey = new MenuItem("FleeHotkey", "FleeHotkey").SetValue(new KeyBind('C', KeyBindType.Press)).SetTooltip("press to zip towards fountain");
-        private static readonly MenuItem FleeDistance = new MenuItem("FleeDistance", "FleeDistance").SetValue(new Slider(500, 100, 1000)).SetTooltip("zip distance in flee mode");
+        private static readonly MenuItem FleeDistance = new MenuItem("FleeDistance", "FleeDistance").SetValue(new Slider(500, 400, 1000)).SetTooltip("zip distance in flee mode");
         private static readonly MenuItem FleeTpEnabled = new MenuItem("FleeTpEnabled", "FleeTpEnabled").SetValue(new KeyBind('T', KeyBindType.Toggle)).SetTooltip("Enable Tp while zip-flee");
         //private static Item blink;
         private static Ability CastingDelayedSpell = new Ability();
@@ -124,9 +124,9 @@ namespace StormSharp
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target in Combo").SetValue(true).SetTooltip("This will lock the target while in combo"));
             //Menu.AddItem(AutoAttackDodgeMenu);
             //Menu.AddItem(NewChaseZipMenu.SetValue(new KeyBind('D', KeyBindType.Toggle)));
-            Menu.AddItem(ChaseZipMenu.SetValue(new KeyBind('F', KeyBindType.Toggle)));
+            Menu.AddItem(ChaseZipMenu.SetValue(new KeyBind('F', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("SelfZip", "SelfZip").SetValue(new KeyBind('W', KeyBindType.Press)));
-            Menu.AddItem(InitiateZipMenu.SetValue(new KeyBind('D', KeyBindType.Toggle)));
+            Menu.AddItem(InitiateZipMenu.SetValue(new KeyBind('D', KeyBindType.Press)));
             FleeMenu.AddItem(FleeHotkey);
             FleeMenu.AddItem(FleeDistance);
             FleeMenu.AddItem(FleeTpEnabled);
@@ -141,9 +141,10 @@ namespace StormSharp
             Game.OnUpdate += Game_OnUpdate_ShowMana;
             //Game.OnUpdate += Game_OnUpdate_ShowAttackRange;
             Game.OnUpdate += Game_OnUpdate_BallLightningDodge;
-            //Game.OnUpdate += Game_OnUpdate_ProjectileDodge;
+            //
             Game.OnUpdate += Game_OnUpdate_Initiate;           
             Game.OnUpdate += Game_OnUpdate_DropManaItem;
+            Game.OnUpdate += Game_OnUpdate_Test;
             Menu.AddSubMenu(FleeMenu);
             Menu.AddToMainMenu();
             #endregion
@@ -220,7 +221,10 @@ namespace StormSharp
             ManaStackItem.Add("item_bloodstone");
             ManaStackItem.Add("item_soul_booster");
             ManaStackItem.Add("item_veil_of_discord");
-            ManaStackItem.Add("item_energy_booster");       
+            ManaStackItem.Add("item_energy_booster");
+            ManaStackItem.Add("item_wraith_band");
+            ManaStackItem.Add("item_ring_of_aquila");
+
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -285,7 +289,7 @@ namespace StormSharp
                     if (ChaseZipMenu.GetValue<KeyBind>().Active && !InitiateZipMenu.GetValue<KeyBind>().Active)
                     {
                         //disable initiate 
-                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
                         var startPos = new Vector2(Drawing.Width - 100, 100);
                         var size = new Vector2(90, 90);
                         Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
@@ -308,7 +312,7 @@ namespace StormSharp
                     } else if (InitiateZipMenu.GetValue<KeyBind>().Active)
                     {
                         //disable chase zip
-                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
                         var startPos = new Vector2(Drawing.Width - 100, 150);
                         var size = new Vector2(90, 90);
                         Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
@@ -482,8 +486,8 @@ namespace StormSharp
 
             // if flee mode enabled
             //disable initiate combo or chasezip combo
-            ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-            InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+            ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+            InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
 
 
             if (Utils.SleepCheck("flee"))
@@ -493,7 +497,7 @@ namespace StormSharp
                     PowerTread.changePowerTread();
                     zip.UseAbility(ZipZap.ZiptoFountain(_me, Fountain, FleeDistance.GetValue<Slider>().Value));
                 }
-                Utils.Sleep(400, "flee");
+                Utils.Sleep(1000, "flee");
             }
 
             if(FleeTpEnabled.GetValue<KeyBind>().Active)
@@ -511,7 +515,7 @@ namespace StormSharp
                     {
                         BoT_lv2.UseAbility(Fountain.Position);
                     }                       
-                    Utils.Sleep(400, "tp");
+                    Utils.Sleep(1000, "tp");
                 }
             }
         }
@@ -589,9 +593,41 @@ namespace StormSharp
 
         }
 
-        public static void Game_OnUpdate_Menu(EventArgs args)
+        public static void Game_OnUpdate_Test(EventArgs args)
         {
-           
+            #region loaded
+            var me = ObjectManager.LocalHero;
+
+            if (!_loaded)
+            {
+                if (!Game.IsInGame || me == null)
+                {
+                    return;
+                }
+                if (me.ClassID == ClassID.CDOTA_Unit_Hero_StormSpirit)
+                {
+                    _loaded = true;
+                    PrintSuccess("> Storm Annihilation Drop loaded! v" + Ver);
+
+                }
+            }
+
+            if (!Game.IsInGame || me == null)
+            {
+                _loaded = false;
+                PrintInfo("> Storm Annihilation unLoaded");
+                return;
+            }
+
+            #endregion
+
+            var target = me.ClosestToMouseTarget(1000);
+            if (target == null) return;
+            var modifiers = target.Modifiers;
+            foreach(var m in modifiers)
+            {
+                //Console.WriteLine("enemy has modifiers " + m.Name);
+            }
         }
 
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
@@ -600,9 +636,16 @@ namespace StormSharp
             //Disable Mana Display Once Another EventOrder comes     
             if (!_me.IsAlive)
             {
-                ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-                InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-            }       
+                ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+                InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+            }
+            //
+            if (!zip.CanBeCasted() && !inUltimate)
+            {
+                ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+                InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+            }
+                 
             switch (args.Order)
             {
                 
@@ -617,8 +660,8 @@ namespace StormSharp
                     }
                 case Order.AbilityTarget:
                     {
-                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        //ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        //InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
                         break;
                     }
                 case Order.AbilityLocation:
@@ -662,15 +705,15 @@ namespace StormSharp
                 case Order.Stop:
                     {
                         //disable the combo
-                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
                         break;
                     }
                 case Order.Hold:
                     {
                         //disabled combo
-                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
-                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Toggle, false));
+                        ChaseZipMenu.SetValue(new KeyBind(ChaseZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+                        InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
                         break;
                     }
                 case Order.ToggleAbility:
@@ -785,6 +828,7 @@ namespace StormSharp
                     aboutToHit = EnemyTarget.Distance2D(myProjectiles.FirstOrDefault().Position) <= 200;
                 }
                 maxManaEfficiency();
+                UseOffensiveItem(EnemyTarget);
                 var AnyHeroInRemnantRange =
                     ObjectManager.GetEntities<Hero>()
                         .Any(
@@ -1097,6 +1141,8 @@ namespace StormSharp
                         x.Team == me.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
                         );
 
+            if (AllEnemyHeroes == null) return;
+
             EnemyCasting = false;
             foreach(var enemy in AllEnemyHeroes)
             {
@@ -1131,6 +1177,10 @@ namespace StormSharp
                             {
 
                                 SpellCastedInSpellsList_StartDodgeWhenInAbilityPhase = true;
+                            }
+                            else
+                            {
+                                //return;
                             }
 
                             if ((EnemyFacingto == me || IsFacing(enemy, me))//enemy facing me when casting
@@ -1214,7 +1264,9 @@ namespace StormSharp
                 myProjectiles = ObjectManager.TrackingProjectiles.Where(x => x.Source.Name == _me.Name && x.Source.Team != _me.GetEnemyTeam());
                 inVortex = _me.Modifiers.Any(x => x.Name == "modifier_storm_spirit_electric_vortex_self_slow");
                 myAttackInAir = myProjectiles.ToList().Count() == 1;
-                
+                bool hasAghanim = _me.Inventory.Items.Any(x => x.Name == "item_ultimate_scepter");
+
+
                 var PowerTread = new TreadSwitch();
 
                 if (!InitiateZipMenu.GetValue<KeyBind>().Active)
@@ -1226,7 +1278,13 @@ namespace StormSharp
                 {
                     InitiateTarget = _me.ClosestToMouseTarget(1000);
                 }
-                if (InitiateTarget == null || !InitiateTarget.IsValid || !InitiateTarget.IsAlive) return;
+                if (InitiateTarget == null || !InitiateTarget.IsValid) return;
+
+                //if target dead, disable combo
+                if (!InitiateTarget.IsAlive)
+                {
+                    InitiateZipMenu.SetValue(new KeyBind(InitiateZipMenu.GetValue<KeyBind>().Key, KeyBindType.Press, false));
+                }
                 var EnemyTarget = InitiateTarget;
                 if (EnemyTarget == null) return;
 
@@ -1235,26 +1293,52 @@ namespace StormSharp
                     aboutToHit = EnemyTarget.Distance2D(myProjectiles.FirstOrDefault().Position) <= 100;
                 }
                 maxManaEfficiency();
+                UseOffensiveItem(EnemyTarget);
                 var AnyHeroInRemnantRange =
                     ObjectManager.GetEntities<Hero>()
                         .Any(
                             x =>
                                 x.Team == _me.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
                                 && x.Distance2D(_me.Position) <= 100);
+                //Console.WriteLine("GameTime" + Game.GameTime);
                 if (Utils.SleepCheck("initiate"))
                 {
                     //initiate: zip and pull
                     if (_me.Distance2D(EnemyTarget) > vortex.CastRange && vortex.CanBeCasted() && vortex.Cooldown == 0 && !zip.IsInAbilityPhase && !inUltimate && zip.CanBeCasted())
                     {
                         PowerTread.changePowerTread();
-                        zip.CastSkillShot(EnemyTarget);
+                        var predPosition = zip.GetPrediction(EnemyTarget);
+                        zip.UseAbility(predPosition);
                         //Orbwalking.Attack(EnemyTargetHero, true);
                     }
                     //else if (((!inPassive || (inPassive && myAttackInAir))) && vortex.CanBeCasted()) //within vortex range
-                    if (!inPassive && vortex.CanBeCasted())
+                    // you most likely want a perfect initiate >= 15min into the game
+                    if (Game.GameTime / 60 > 15)
                     {
-                        vortex.UseAbility(EnemyTarget);
-                        Orbwalking.Attack(EnemyTarget, true);
+                        if (vortex.CanBeCasted())
+                        {
+                            if (hasAghanim && _me.Distance2D(EnemyTarget) <= vortex.CastRange + 100)
+                            {
+                                vortex.UseAbility();
+                            }
+                            else {
+                                vortex.UseAbility(EnemyTarget);
+                            }
+                            Orbwalking.Attack(EnemyTarget, true);
+                        }
+                    }
+                    else {
+                        if (!inPassive && vortex.CanBeCasted())
+                        {
+                            if (hasAghanim && _me.Distance2D(EnemyTarget) <= vortex.CastRange + 100)
+                            {
+                                vortex.UseAbility();
+                            }
+                            else {
+                                vortex.UseAbility(EnemyTarget);
+                            }
+                            Orbwalking.Attack(EnemyTarget, true);
+                        }
                     }
                     Utils.Sleep(200, "initiate");
                 }
@@ -1351,6 +1435,17 @@ namespace StormSharp
             {
 
             } 
+        }
+
+        private static void UseOffensiveItem(Unit target)
+        {
+            StormItems OffensiveItem = new StormItems();
+            OffensiveItem.Orchid(target);
+            OffensiveItem.Medalion(target);
+            OffensiveItem.SolarCrest(target);
+            OffensiveItem.Veil(target);
+            OffensiveItem.Urn(target);
+            OffensiveItem.Bloodthorn(target);
         }
 
         private static void DropItems(Hero me)

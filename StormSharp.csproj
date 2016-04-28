@@ -87,6 +87,7 @@
     <Compile Include="HeroDodge.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StormItems.cs" />
     <Compile Include="TreadSwitch.cs" />
     <Compile Include="ZipZap.cs" />
   </ItemGroup>

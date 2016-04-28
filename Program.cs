@@ -563,7 +563,10 @@ namespace StormSharp
                 if (!IsEnemyHeroesNearby)
                 {
                     //drop all items that are in manastacklist
-
+                    if (!me.NetworkActivity.Equals(NetworkActivity.Idle))
+                    {
+                        _me.Hold();
+                    }
                     DropItems(me);
                     if (!me.Inventory.Items.Any<Item>(x => ManaStackItem.Exists(y => y == x.Name)) && soulRing != null && soulRing.CanBeCasted())
                     {
